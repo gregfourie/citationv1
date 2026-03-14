@@ -1,0 +1,88 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2868
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 HelveticaNeue;\f2\froman\fcharset0 Times-Roman;
+\f3\froman\fcharset0 Times-Bold;\f4\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red16\green16\blue16;\red255\green255\blue255;\red46\green47\blue44;
+\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c7843\c7843\c7451;\cssrgb\c100000\c100000\c100000;\cssrgb\c23922\c23922\c22745;
+\cssrgb\c0\c0\c0;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid1\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid101\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid2}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Instructions\
+\
+\pard\pardeftab720\partightenfactor0
+
+\f1\fs21 \cf2 \cb3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 I am building the 'Citation Checker App' for the South African legal market. I have provided the vision, UI requirements (ERA-style), and core Python logic. Using these as your foundation, please build a functional Streamlit prototype that allows me to upload a .docx file and displays the 'Audit Table' for any citations found."\cb1 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs32 \cf4 \strokec4 \
+\pard\pardeftab720\partightenfactor0
+
+\fs24 \cf0 \strokec5 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa240\partightenfactor0
+\ls1\ilvl0
+\f3\b \cf0 {\listtext	1	}I\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec5 nstruction:
+\f2\b0  Give the following "Command Prompt":\
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 "I have uploaded the full architecture for the Citation Checker App.\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f3\b \cf0 Your Task:
+\f2\b0  Create a unified 
+\f4\fs26 app.py
+\f2\fs24  using 
+\f3\b Streamlit
+\f2\b0 .\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa240\partightenfactor0
+\ls2\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	1	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec5 Integrate the 
+\f4\fs26 CitationEngine
+\f2\fs24  (File 5) to parse uploaded documents.\
+\ls2\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	2	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec5 Integrate the 
+\f4\fs26 SafliiBridge
+\f2\fs24  (File 6) to attempt a lookup for each citation.\
+\ls2\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	3	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec5 Build the UI according to the 'ERA-type' specification (File 3), prioritizing the 
+\f3\b Audit Table
+\f2\b0  and the 
+\f3\b Side-by-Side Comparison
+\f2\b0  for any quotes I flag in the document.\
+\ls2\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	4	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec5 Ensure there is a placeholder for the 
+\f3\b 'Paginated Bundle'
+\f2\b0  PDF generation."\
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f3\b\fs28 \cf0 \
+Context: \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs24 \cf0 \outl0\strokewidth0 01_project_vision.md\
+\
+# Project: Legal Citation Checker (LCC)\
+**Goal:** A high-fidelity tool for South African Judges and Counsel to verify citations, quotations, and produce court-ready bundles.\
+\
+## Core Pillars\
+1. **Verify:** Check if case citations exist in primary databases (SAFLII, Judiciary, Cape Reports).\
+2. **Audit:** Create a "Certificate of Accuracy" via a table and visual screenshots.\
+3. **Certify:** Generate a paginated, indexed court bundle from the verified citations.\
+\
+## Targeted Users\
+- **Judiciary:** For verifying the accuracy of Heads of Argument submitted by counsel.\
+- **Counsel/Advocates:** For "Blue-booking" their own documents before filing.\
+\
+## Key Logic\
+- **Input:** .docx or .pdf files.\
+- **Processing:** Extract citations (e.g., *S v Makwanyane 1995 (3) SA 391 (CC)*) and cross-reference.\
+- **The "Flynote" Check:** Extract the summary of the case to ensure the legal context matches the document's argument.
+\f3\b\fs28 \outl0\strokewidth0 \strokec5 \
+}

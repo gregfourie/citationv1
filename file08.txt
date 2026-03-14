@@ -1,0 +1,41 @@
+08_ui_discrepancy_resolution.py
+
+Purpose: An interactive UI component to handle cases where the document has an error (e.g., wrong year) but the system found the correct case.
+
+import streamlit as st
+
+def render_resolution_screen(input_citation, found_case):
+    """
+    Displays a side-by-side comparison when a citation discrepancy is found.
+    """
+    st.warning("⚠️ Citation Discrepancy Detected")
+    st.write(f"The system found a highly probable match, but the details differ from your document.")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Your Document")
+        st.info(f"**Citation:** {input_citation['text']}")
+        st.write(f"**Year:** {input_citation['year']}")
+        st.write(f"**Parties:** {input_citation['parties']}")
+
+    with col2:
+        st.subheader("SAFLII Match")
+        st.success(f"**Citation:** {found_case['canonical_citation']}")
+        st.write(f"**Year:** {found_case['year']}")
+        st.write(f"**Parties:** {found_case['parties']}")
+        st.caption(f"Match Confidence: {found_case['confidence']}%")
+
+    # The Resolution Actions
+    st.write("---")
+    c1, c2, c3 = st.columns(3)
+    
+    if c1.button("✅ Confirm & Update"):
+        st.session_state.audit_log.append(f"Corrected {input_citation['text']} to {found_case['canonical_citation']}")
+        return "UPDATE"
+        
+    if c2.button("❌ Reject (Search Again)"):
+        return "RETRY"
+        
+    if c3.button("📝 Manual Edit"):
+        return "MANUAL"

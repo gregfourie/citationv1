@@ -1,0 +1,28 @@
+File 9: 09_citation_cross_reference.json
+Purpose: A mapping file to help the app translate Juta/LexisNexis references into SAFLII search terms.
+
+{
+  "mappings": [
+    {
+      "juta_ref": "1995 (3) SA 391 (CC)",
+      "lexis_ref": "1995 (6) BCLR 665 (CC)",
+      "neutral_ref": "[1995] ZACC 3",
+      "parties": "S v Makwanyane",
+      "saflii_path": "za/cases/ZACC/1995/3.html"
+    },
+    {
+      "juta_ref": "2002 (5) SA 721 (CC)",
+      "lexis_ref": "2002 (10) BCLR 1033 (CC)",
+      "neutral_ref": "[2002] ZACC 15",
+      "parties": "Minister of Health v TAC",
+      "saflii_path": "za/cases/ZACC/2002/15.html"
+    }
+  ],
+  "patterns": {
+    "SA": "South African Law Reports (Juta)",
+    "All SA": "All South African Law Reports (LexisNexis)",
+    "BCLR": "Butterworths Constitutional Law Reports",
+    "ZASCA": "Supreme Court of Appeal Neutral",
+    "ZACC": "Constitutional Court Neutral"
+  }
+}

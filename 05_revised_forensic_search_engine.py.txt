@@ -1,0 +1,37 @@
+05_forensic_search_engine.py
+
+Purpose: Handles the "Broad-to-Narrow" search logic to resolve discrepancies in citations and party names.
+
+import re
+from rapidfuzz import fuzz # Highly recommended for legal name comparisons
+
+class ForensicSearchEngine:
+    """
+    Step 1: Search and Match
+    Handles errors in citations by searching party names and 
+    cross-referencing with SAFLII data.
+    """
+    
+    def extract_legal_entities(self, citation_string):
+        """
+        Extracts Party A and Party B.
+        Example: 'Smith v City of Johannesburg [2024] ZAGPJHC 12'
+        Returns: ('Smith', 'City of Johannesburg')
+        """
+        # Regex to capture text between start and the first 'v' and between 'v' and citation markers
+        match = re.search(r"([A-Z].+?)\s+v\s+([A-Z].+?)(?=\s*\[|\s*\d{4}|\s*\(|\s*SA|\s*All)", citation_string)
+        if match:
+            return match.group(1).strip(), match.group(2).strip()
+        return None, None
+
+    def reconcile_search(self, input_data, saflii_results):
+        """
+        Compares input year/ref against SAFLII search results.
+        If Name Match > 90% but Year is different, flag as 'Typo Detected'.
+        """
+        # Logic for Claude to implement:
+        # 1. Take extracted names.
+        # 2. Query SAFLII search via names.
+        # 3. For each result, compare the year in the user's doc with the SAFLII year.
+        # 4. Highlight discrepancies for user confirmation.
+        pass

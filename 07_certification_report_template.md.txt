@@ -1,0 +1,48 @@
+07_certification_report_template.md
+Purpose: The final output document that gives the "Audit Trail" a professional, court-ready finish.
+
+# CERTIFICATE OF ACCURACY: CITATION AUDIT
+**Date of Audit:** 2026-03-14
+**Verified By:** Citation Checker App (v3.1)
+**Matter:** ABC Construction (Pty) Ltd // City of Johannesburg
+
+---
+
+## 1. EXECUTIVE SUMMARY
+This document certifies that the "Heads of Argument" submitted for the above matter have been electronically audited against primary legal databases, including **SAFLII** and **The South African Judiciary** records.
+
+**Overall Accuracy Score:** 98%
+**Issues Resolved:** 2
+**Unresolved Flags:** 0
+
+---
+
+## 2. CITATION VERIFICATION LOG
+| Citation Found | Source Verified | Status | Ref ID |
+| :--- | :--- | :--- | :--- |
+| *S v Makwanyane* 1995 (3) SA 391 (CC) | SAFLII | ✅ Verified | CC-001 |
+| *Minister of Health v TAC* [2002] ZACC 15 | Judiciary | ✅ Verified | CC-002 |
+| *Cape Town v Smith* [2023] ZAWCHC 12 | Cape Reports | ✅ Verified | CC-003 |
+
+---
+
+## 3. QUOTATION INTEGRITY AUDIT (Visual Match)
+**Reference:** Para 3.1 (Quote regarding Right to Life)
+- **Document Text:** "...may never arbitrarily take a life, even if the person is a criminal."
+- **Source Truth:** "...may never arbitrarily take a life, even if the person is a criminal."
+- **Integrity Status:** ✅ **100% Match (Literal)**
+
+---
+
+## 4. BUNDLE INDEX
+The following judgments have been retrieved and appended to the final Paginated Court Bundle:
+1. **Annexure A:** *S v Makwanyane* (78 Pages)
+2. **Annexure B:** *Minister of Health v TAC* (54 Pages)
+3. **Annexure C:** *Cape Town v Smith* (12 Pages)
+
+---
+
+## 5. DECLARATION
+The Citation Checker App hereby certifies that the citations and quotations contained in the audited document match the primary sources cited above as of the date of this report.
+
+**[Digital Signature: CERTIFIED]**

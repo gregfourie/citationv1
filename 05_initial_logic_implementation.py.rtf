@@ -1,0 +1,48 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2868
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 Times-Roman;\f1\froman\fcharset0 Times-Bold;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf0 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 05_initial_logic_implementation.py\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b \cf0 \strokec2 Purpose:
+\f0\b0 \strokec2  Core regex and extraction logic for Claude to reference.\
+\
+import re\
+\
+class CitationEngine:\
+    """\
+    Core logic for identifying South African legal citations.\
+    Designed for use in the 'Citation Checker App' MVP.\
+    """\
+    \
+    # South African Citation Patterns\
+    PATTERNS = \{\
+        # Standard: Case Name 1995 (3) SA 391 (CC)\
+        "standard_sa": r"([A-Z].+?v\\s.+?)\\s(\\d\{4\})\\s\\((\\d+)\\)\\sSA\\s(\\d+)\\s\\(([A-Z]+)\\)",\
+        \
+        # Neutral: Case Name [2023] ZASCA 15\
+        "neutral_zasca": r"([A-Z].+?v\\s.+?)\\s\\[(\\d\{4\})\\]\\sZASCA\\s(\\d+)",\
+        \
+        # Constitutional Court: [2022] ZACC 45\
+        "neutral_zacc": r"([A-Z].+?v\\s.+?)\\s\\[(\\d\{4\})\\]\\sZACC\\s(\\d+)",\
+        \
+        # Regional: [2023] ZAWCHC 12\
+        "neutral_regional": r"([A-Z].+?v\\s.+?)\\s\\[(\\d\{4\})\\]\\sZA[A-Z]\{3,4\}\\s(\\d+)"\
+    \}\
+\
+    def extract_citations(self, text):\
+        found_citations = []\
+        for label, pattern in self.PATTERNS.items():\
+            matches = re.findall(pattern, text)\
+            for m in matches:\
+                found_citations.append(\{"type": label, "data": m\})\
+        return found_citations\
+\
+# Example Usage for AI:\
+# "Analyze the text, extract citations using these patterns, and cross-reference with SAFLII."}
