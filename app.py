@@ -14,6 +14,7 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 from docx import Document
+import pdfplumber
 from rapidfuzz import fuzz
 
 
@@ -844,6 +845,28 @@ def extract_text_from_docx(uploaded_file):
     return "\n".join(paragraphs + footnotes)
 
 
+def extract_text_from_pdf(uploaded_file):
+    """Extract text from a PDF file."""
+    text_parts = []
+    with pdfplumber.open(io.BytesIO(uploaded_file.read())) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text_parts.append(page_text)
+    return "\n".join(text_parts)
+
+
+def extract_text(uploaded_file):
+    """Extract text from an uploaded file (.docx or .pdf)."""
+    name = uploaded_file.name.lower()
+    if name.endswith(".pdf"):
+        return extract_text_from_pdf(uploaded_file)
+    elif name.endswith(".docx"):
+        return extract_text_from_docx(uploaded_file)
+    else:
+        return ""
+
+
 def format_citation_display(citation):
     """Format a citation dict into a human-readable string."""
     ctype = citation["type"]
@@ -909,7 +932,7 @@ def _party_name_filename(display_citation, fallback_filename):
 def generate_certificate(audit_results, filename):
     """Generate a Certificate of Accuracy report in Markdown."""
     today = date.today().strftime("%Y-%m-%d")
-    matter = filename.replace(".docx", "").replace("_", " ").title() if filename else "Unknown"
+    matter = filename.replace(".docx", "").replace(".pdf", "").replace("_", " ").title() if filename else "Unknown"
 
     verified = sum(1 for r in audit_results if r["saflii"]["status"] == "found")
     typos = sum(1 for r in audit_results if r["saflii"]["status"] == "typo_detected")
@@ -1032,12 +1055,12 @@ def render_hopper():
     )
 
     st.markdown("### The Hopper")
-    st.markdown("Upload a Heads of Argument or legal document to begin citation extraction.")
+    st.markdown("Upload a Heads of Argument or legal document (.docx or .pdf) to begin citation extraction.")
 
     uploaded = st.file_uploader(
-        "Drop your .docx file here",
-        type=["docx"],
-        key="docx_uploader",
+        "Drop your .docx or .pdf file here",
+        type=["docx", "pdf"],
+        key="file_uploader",
     )
 
     if uploaded is not None and (
@@ -1045,7 +1068,7 @@ def render_hopper():
     ):
         st.session_state.filename = uploaded.name
         with st.spinner("Extracting text..."):
-            text = extract_text_from_docx(uploaded)
+            text = extract_text(uploaded)
             st.session_state.uploaded_text = text
 
         engine = CitationEngine()
