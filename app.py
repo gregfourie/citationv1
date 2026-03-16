@@ -126,8 +126,8 @@ def inject_era_css():
     .status-manual { color: #7F8C8D; font-weight: bold; }
     .status-error { color: #C0392B; font-weight: bold; }
     .status-typo { color: #F39C12; font-weight: bold; }
-    .status-judiciary { color: #2980B9; font-weight: bold; }
-    .status-google { color: #8E44AD; font-weight: bold; }
+    .status-potential { color: #3498DB; font-weight: bold; }
+    .status-cited-by { color: #8E44AD; font-weight: bold; }
     .status-mismatch { color: #E74C3C; font-weight: bold; }
     .citation-name { font-family: Georgia, serif; font-style: italic; }
     .action-link {
@@ -517,6 +517,66 @@ def throttled_get(session, url, **kwargs):
     return resp
 
 
+
+# ---------------------------------------------------------------------------
+# Confidence Tiers
+# ---------------------------------------------------------------------------
+
+CONFIDENCE_TIERS = {
+    "EXACT_MATCH":           {"label": "Verified",        "colour": "#27AE60", "css_class": "status-verified"},
+    "PARTIAL_MATCH":         {"label": "Likely Match",    "colour": "#F39C12", "css_class": "status-typo"},
+    "POTENTIAL_MATCH":       {"label": "Possible Match",  "colour": "#3498DB", "css_class": "status-potential"},
+    "CITED_IN_OTHER_CASES":  {"label": "Cited Elsewhere", "colour": "#8E44AD", "css_class": "status-cited-by"},
+    "NOT_FOUND":             {"label": "Not Found",       "colour": "#E74C3C", "css_class": "status-not-found"},
+}
+
+CONFIDENCE_LABELS = {
+    "EXACT_MATCH":           "Exact match — case found on SAFLII",
+    "PARTIAL_MATCH":         "Partial match — strong overlap, verify manually",
+    "POTENTIAL_MATCH":       "Potential match — some indicators align, needs verification",
+    "CITED_IN_OTHER_CASES":  "Not on SAFLII directly, but cited in other judgments",
+    "NOT_FOUND":             "Not found on SAFLII — potential hallucination, verify independently",
+}
+
+
+def _classify_confidence(status, match_confidence, found_via, citation_data):
+    """Map lookup results to the 5-tier confidence system.
+
+    Args:
+        status: the raw status from SafliiBridge.lookup()
+        match_confidence: numeric confidence (0-100)
+        found_via: source string (SAFLII only)
+        citation_data: the parsed citation dict
+
+    Returns:
+        One of: EXACT_MATCH, PARTIAL_MATCH, POTENTIAL_MATCH,
+                CITED_IN_OTHER_CASES, NOT_FOUND
+    """
+    # Direct SAFLII hit with high confidence → EXACT
+    if status == "found" and found_via == "SAFLII" and match_confidence >= 80:
+        return "EXACT_MATCH"
+
+    # SAFLII hit with moderate confidence or typo → PARTIAL
+    if status in ("found", "typo_detected") and found_via == "SAFLII" and match_confidence >= 50:
+        return "PARTIAL_MATCH"
+
+    # Mismatch resolved (wrong case at URL, right case found by search) → PARTIAL
+    if status == "mismatch_resolved":
+        return "PARTIAL_MATCH"
+
+    # SAFLII hit but low confidence → POTENTIAL
+    if status in ("found", "typo_detected") and found_via == "SAFLII":
+        return "POTENTIAL_MATCH"
+
+    # Old provincial citations that aren't on SAFLII
+    ctype = citation_data.get("type", "")
+    if status == "not_found" and ctype == "old_provincial":
+        return "CITED_IN_OTHER_CASES"
+
+    # Nothing found on SAFLII
+    return "NOT_FOUND"
+
+
 class SafliiBridge:
     """Forensic search pipeline for SAFLII lookups.
 
@@ -555,7 +615,7 @@ class SafliiBridge:
     # ----- Main entry point -----
 
     def lookup(self, citation_data):
-        """Look up a citation using cascading search: SAFLII → Judiciary → Google.
+        """Look up a citation on SAFLII only.
 
         When the direct URL points to a different case (name mismatch), the search
         continues by party name to find the intended case and reports both.
@@ -668,26 +728,7 @@ class SafliiBridge:
         else:
             search_trail.append({"source": "SAFLII (search)", "result": "No results"})
 
-        # ---- Step 3: Search judiciary.org.za ----
-        judiciary_result = self._search_judiciary(citation_data)
-        if judiciary_result:
-            search_trail.append({
-                "source": judiciary_result["source_name"],
-                "result": "Found",
-            })
-            return self._add_standard_keys(judiciary_result,
-                search_trail=search_trail,
-                match_confidence=50,
-                found_via=judiciary_result["source_name"],
-                cited_case_title=mismatch_info["title"] if mismatch_info else None,
-                cited_case_url=mismatch_info["url"] if mismatch_info else None,
-                cited_case_citation=mismatch_info["citation"] if mismatch_info else None,
-            )
-        else:
-            site = self._get_judiciary_site(citation_data)
-            search_trail.append({"source": site["name"], "result": "Not found"})
-
-        # ---- If we had a mismatch but couldn't find the right case anywhere ----
+        # ---- If we had a mismatch but couldn't find the right case on SAFLII ----
         if mismatch_info:
             # Return the wrong case with typo_detected so user still sees something
             result = self._fetch_judgment(mismatch_info["url"])
@@ -706,12 +747,11 @@ class SafliiBridge:
                 cited_case_citation=mismatch_info["citation"],
             )
 
-        # ---- Step 4: Google fallback ----
-        google_result = self._search_google(citation_data)
-        search_trail.append({"source": "Google", "result": "Search link generated"})
-        return self._add_standard_keys(google_result,
+        # ---- Not found on SAFLII ----
+        return self._add_standard_keys(
+            self._not_found_result(citation_data, search_trail),
             search_trail=search_trail,
-            found_via="Google (manual)",
+            found_via=None,
         )
 
     # ----- Direct URL construction -----
@@ -971,151 +1011,6 @@ class SafliiBridge:
         except Exception as e:
             return {"status": "error", "error": str(e), "source_url": url}
 
-    # ----- Judiciary.org.za fallback search -----
-
-    # Map court codes to judiciary website search endpoints
-    JUDICIARY_SITES = {
-        "ZACC": {
-            "name": "Constitutional Court",
-            "search_url": "https://www.concourt.org.za/index.php",
-            "base_url": "https://www.concourt.org.za",
-        },
-        "ZASCA": {
-            "name": "Supreme Court of Appeal",
-            "search_url": "https://www.supremecourtofappeal.org.za/index.php",
-            "base_url": "https://www.supremecourtofappeal.org.za",
-        },
-    }
-
-    # Fallback for all other courts
-    JUDICIARY_DEFAULT = {
-        "name": "SA Judiciary",
-        "search_url": "https://www.judiciary.org.za/index.php",
-        "base_url": "https://www.judiciary.org.za",
-    }
-
-    def _get_judiciary_site(self, citation_data):
-        """Determine which judiciary website to search based on court code."""
-        ctype = citation_data["type"]
-        data = citation_data["data"]
-
-        if ctype == "neutral_zacc":
-            return self.JUDICIARY_SITES["ZACC"]
-        elif ctype == "neutral_zasca":
-            return self.JUDICIARY_SITES["ZASCA"]
-        elif ctype == "neutral_regional":
-            court = resolve_court_code(data[2])
-            return self.JUDICIARY_SITES.get(court, self.JUDICIARY_DEFAULT)
-        elif ctype == "old_provincial":
-            court_abbrev = data[2]
-            resolved = resolve_court_code(court_abbrev)
-            return self.JUDICIARY_SITES.get(resolved, self.JUDICIARY_DEFAULT)
-        elif ctype in ("standard_sa", "bclr", "sacr", "all_sa"):
-            court_abbrev = data[4]
-            resolved = resolve_court_code(court_abbrev)
-            if resolved == "ZACC":
-                return self.JUDICIARY_SITES["ZACC"]
-            elif resolved == "ZASCA":
-                return self.JUDICIARY_SITES["ZASCA"]
-        return self.JUDICIARY_DEFAULT
-
-    def _search_judiciary(self, citation_data):
-        """Search the relevant judiciary.org.za website.
-
-        Returns a result dict or None if not found.
-        """
-        display = format_citation_display(citation_data)
-        party_a, party_b = extract_party_names(display)
-        query = f"{party_a} v {party_b}" if party_a else display
-
-        site = self._get_judiciary_site(citation_data)
-
-        try:
-            resp = throttled_get(
-                self.session,
-                site["search_url"],
-                params={
-                    "searchword": query,
-                    "task": "search",
-                    "option": "com_search",
-                },
-            )
-            if resp.status_code != 200:
-                return None
-
-            soup = BeautifulSoup(resp.text, "html.parser")
-
-            # Joomla search results are typically in <dl> or <div class="result">
-            # We need to match party names in the results to avoid false positives
-            result_links = []
-            for link in soup.find_all("a", href=True):
-                href = link["href"]
-                text = link.get_text(strip=True).lower()
-
-                # Must contain at least one party name to be relevant
-                if not party_a:
-                    continue
-                pa_lower = party_a.lower()
-                pb_lower = party_b.lower() if party_b else ""
-
-                if pa_lower in text or (pb_lower and pb_lower in text):
-                    if href.startswith("/"):
-                        href = site["base_url"] + href
-                    result_links.append({
-                        "title": link.get_text(strip=True),
-                        "url": href,
-                    })
-
-            if not result_links:
-                # Check the full page text for party name mentions
-                page_text = soup.get_text().lower()
-                if party_a and party_a.lower() in page_text and party_b and party_b.lower() in page_text:
-                    return {
-                        "status": "found_judiciary",
-                        "title": f"Reference found on {site['name']} (no direct link)",
-                        "source_url": f"{site['search_url']}?searchword={quote_plus(query)}&task=search",
-                        "source_name": site["name"],
-                    }
-                return None
-
-            # Return the first relevant result
-            best = result_links[0]
-            return {
-                "status": "found_judiciary",
-                "title": best["title"][:120],
-                "source_url": best["url"],
-                "source_name": site["name"],
-            }
-
-        except Exception:
-            return None
-
-    # ----- Google fallback search -----
-
-    def _search_google(self, citation_data):
-        """Search Google as a last resort.
-
-        Returns a result dict with a Google search URL (we don't scrape Google,
-        just provide the search link for manual verification).
-        """
-        display = format_citation_display(citation_data)
-        party_a, party_b = extract_party_names(display)
-
-        # Build a targeted legal search query
-        if party_a:
-            query = f'"{party_a} v {party_b}" site:saflii.org OR site:judiciary.org.za OR site:concourt.org.za'
-        else:
-            query = f'"{display}" South African judgment'
-
-        google_url = f"https://www.google.com/search?q={quote_plus(query)}"
-
-        return {
-            "status": "found_google",
-            "title": "Manual verification required (Google search)",
-            "source_url": google_url,
-            "source_name": "Google Search",
-        }
-
     # ----- Not-found fallback -----
 
     def _not_found_result(self, citation_data, search_trail=None):
@@ -1311,36 +1206,36 @@ def generate_certificate(audit_results, filename):
     today = date.today().strftime("%Y-%m-%d")
     matter = filename.replace(".docx", "").replace(".pdf", "").replace("_", " ").title() if filename else "Unknown"
 
-    verified = sum(1 for r in audit_results if r["saflii"]["status"] == "found")
-    typos = sum(1 for r in audit_results if r["saflii"]["status"] == "typo_detected")
-    mismatches = sum(1 for r in audit_results if r["saflii"]["status"] == "mismatch_resolved")
-    judiciary = sum(1 for r in audit_results if r["saflii"]["status"] == "found_judiciary")
-    manual = sum(1 for r in audit_results if r["saflii"]["status"] == "found_google")
-    not_found = sum(1 for r in audit_results if r["saflii"]["status"] == "not_found")
+    # Count by confidence tier
+    exact = sum(1 for r in audit_results if r["saflii"].get("confidence_tier") == "EXACT_MATCH")
+    partial = sum(1 for r in audit_results if r["saflii"].get("confidence_tier") == "PARTIAL_MATCH")
+    potential = sum(1 for r in audit_results if r["saflii"].get("confidence_tier") == "POTENTIAL_MATCH")
+    cited_by = sum(1 for r in audit_results if r["saflii"].get("confidence_tier") == "CITED_IN_OTHER_CASES")
+    not_found = sum(1 for r in audit_results if r["saflii"].get("confidence_tier") == "NOT_FOUND")
     errors = sum(1 for r in audit_results if r["saflii"]["status"] in ("error", "timeout"))
     total = len(audit_results)
-    score = round(((verified + typos) / total * 100)) if total > 0 else 0
+    # Legacy counts for backward compat
+    verified = exact
+    typos = sum(1 for r in audit_results if r["saflii"]["status"] == "typo_detected")
+    mismatches = sum(1 for r in audit_results if r["saflii"]["status"] == "mismatch_resolved")
+    score = round(((exact + partial) / total * 100)) if total > 0 else 0
 
     # Citation log table
     log_rows = []
     for i, r in enumerate(audit_results, 1):
-        status_map = {
-            "found": "Verified (SAFLII)",
-            "mismatch_resolved": "Wrong Case — Suggestion Found",
-            "typo_detected": "Typo Detected (SAFLII)",
-            "found_judiciary": "Found (Judiciary)",
-            "found_google": "Manual Check (Google)",
-            "not_found": "Not Found",
-            "timeout": "Timeout",
-            "error": "Error",
-        }
-        status_text = status_map.get(r["saflii"]["status"], "Unknown")
+        tier = r["saflii"].get("confidence_tier", "NOT_FOUND")
+        tier_label = CONFIDENCE_TIERS.get(tier, {}).get("label", "Unknown")
         found_via = r["saflii"].get("found_via", "---")
-        source = found_via if r["saflii"]["status"] in ("found", "typo_detected", "mismatch_resolved", "found_judiciary") else "---"
+        source = found_via if r["saflii"]["status"] in ("found", "typo_detected", "mismatch_resolved") else "---"
         ref_id = f"CC-{i:03d}"
         confidence = r["saflii"].get("match_confidence", "---")
+        notes = ""
+        if r["saflii"]["status"] == "typo_detected":
+            notes = " (typo)"
+        elif r["saflii"]["status"] == "mismatch_resolved":
+            notes = " (wrong case)"
         log_rows.append(
-            f"| {r['display']} | {source} | {status_text} | {confidence}% | {ref_id} |"
+            f"| {r['display']} | {source} | {tier_label}{notes} | {confidence}% | {ref_id} |"
         )
 
     log_table = "\n".join(log_rows)
@@ -1368,13 +1263,16 @@ def generate_certificate(audit_results, filename):
 This document certifies that the uploaded document has been electronically audited against primary legal databases, including **SAFLII** and **The South African Judiciary** records.
 
 **Overall Accuracy Score:** {score}%
-**Citations Verified (SAFLII):** {verified}
-**Citations with Typos:** {typos}
-**Wrong Case (Mismatch Resolved):** {mismatches}
-**Citations Found (Judiciary):** {judiciary}
-**Citations Requiring Manual Check:** {manual}
-**Citations Not Found:** {not_found}
-**Errors/Timeouts:** {errors}
+
+### Confidence Breakdown
+| Tier | Count | Description |
+| :--- | :--- | :--- |
+| **Exact Match** | {exact} | Case found on SAFLII with high confidence |
+| **Partial Match** | {partial} | Strong overlap — verify manually |
+| **Potential Match** | {potential} | Some indicators align — needs verification |
+| **Cited Elsewhere** | {cited_by} | Not on SAFLII but cited in other judgments |
+| **Not Found** | {not_found} | Not found — potential hallucination |
+| **Errors/Timeouts** | {errors} | Technical failures |
 
 ---
 
@@ -1514,6 +1412,16 @@ def run_saflii_audit():
 
         saflii_result = bridge.lookup(c)
 
+        # Classify into 5-tier confidence system
+        confidence_tier = _classify_confidence(
+            status=saflii_result.get("status", "not_found"),
+            match_confidence=saflii_result.get("match_confidence", 0),
+            found_via=saflii_result.get("found_via", ""),
+            citation_data=c,
+        )
+        saflii_result["confidence_tier"] = confidence_tier
+        saflii_result["confidence_tier_label"] = CONFIDENCE_LABELS.get(confidence_tier, "")
+
         results.append({
             "citation": c,
             "display": display,
@@ -1571,23 +1479,23 @@ def render_auditor():
         cited_case_cit = r["saflii"].get("cited_case_citation", "")
         suggested_cit = r["saflii"].get("suggested_citation", "")
 
-        # Status cell
-        if status == "found":
-            status_html = '<span class="status-verified">VERIFIED</span>'
-        elif status == "mismatch_resolved":
-            status_html = '<span class="status-mismatch">WRONG CASE</span>'
+        # Status cell — use 5-tier confidence system
+        confidence_tier = r["saflii"].get("confidence_tier", "NOT_FOUND")
+        tier_info = CONFIDENCE_TIERS.get(confidence_tier, CONFIDENCE_TIERS["NOT_FOUND"])
+        tier_label = tier_info["label"]
+        tier_colour = tier_info["colour"]
+
+        # Add sub-status for typos and mismatches
+        if status == "mismatch_resolved":
+            status_html = f'<span style="color:{tier_colour};font-weight:bold;">{tier_label}</span><br/><span style="font-size:0.75em;color:#E67E22;">WRONG CASE</span>'
         elif status == "typo_detected":
-            status_html = '<span class="status-typo">TYPO DETECTED</span>'
-        elif status == "found_judiciary":
-            status_html = '<span class="status-judiciary">FOUND (JUDICIARY)</span>'
-        elif status == "found_google":
-            status_html = '<span class="status-google">MANUAL CHECK</span>'
-        elif status == "not_found":
-            status_html = '<span class="status-not-found">NOT FOUND</span>'
+            status_html = f'<span style="color:{tier_colour};font-weight:bold;">{tier_label}</span><br/><span style="font-size:0.75em;color:#E67E22;">TYPO DETECTED</span>'
         elif status == "timeout":
             status_html = '<span class="status-error">TIMEOUT</span>'
-        else:
+        elif status == "error":
             status_html = '<span class="status-error">ERROR</span>'
+        else:
+            status_html = f'<span style="color:{tier_colour};font-weight:bold;">{tier_label}</span>'
 
         # Source match cell
         if status == "mismatch_resolved":
@@ -1616,12 +1524,6 @@ def render_auditor():
                     f'SAFLII says {year_disc["saflii"]}'
                     f'</div>'
                 )
-        elif status == "found_judiciary":
-            source_html = f'{title[:80]}'
-            source_html += f'<div class="found-via-note">Found via {found_via}</div>'
-        elif status == "found_google":
-            source_html = f'Not found on SAFLII or Judiciary'
-            source_html += f'<div class="found-via-note">Google search link provided</div>'
         elif status == "not_found":
             source_html = "---"
         else:
