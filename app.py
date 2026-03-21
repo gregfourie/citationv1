@@ -1130,6 +1130,13 @@ class SafliiBridge:
         # Normalize "v." to "v" — old-fashioned form hurts search results
         query = re.sub(r'\bv\.\s', 'v ', query)
 
+        # Strip ampersands — SAFLII's search engine converts URL-encoded '&' (%26)
+        # into the literal word "amp", which breaks the query.
+        # e.g. "Aviation Union of SA & another" → searches for "...amp another"
+        query = query.replace("&", " ")
+        # Collapse multiple spaces from the replacement
+        query = re.sub(r'\s{2,}', ' ', query).strip()
+
         # No court filter — search across all SA courts for maximum recall.
         # The fuzzy matching step will verify the correct case is selected.
         ctype = citation_data["type"]
