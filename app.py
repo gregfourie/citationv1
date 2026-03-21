@@ -1450,13 +1450,21 @@ def extract_text_from_docx(uploaded_file):
 
 
 def extract_text_from_pdf(uploaded_file):
-    """Extract text from a PDF file."""
+    """Extract text from a PDF file.
+
+    Processes pages individually and flushes each page's resources to keep
+    memory usage bounded. Without this, pdfplumber holds every page's layout
+    objects in memory simultaneously — a 200-page PDF can consume 500+ MB,
+    which crashes Vercel/Replit servers with limited RAM.
+    """
     text_parts = []
-    with pdfplumber.open(io.BytesIO(uploaded_file.read())) as pdf:
+    pdf_bytes = io.BytesIO(uploaded_file.read())
+    with pdfplumber.open(pdf_bytes) as pdf:
         for page in pdf.pages:
             page_text = page.extract_text()
             if page_text:
                 text_parts.append(page_text)
+            page.flush_cache()  # release layout objects for this page
     return "\n".join(text_parts)
 
 
