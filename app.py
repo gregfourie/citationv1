@@ -25,68 +25,175 @@ from rapidfuzz import fuzz
 def inject_era_css():
     st.markdown("""
     <style>
+    /* ===== ANTHROPIC / CLAUDE DESIGN SYSTEM ===== */
+
+    /* Palette:
+       --cream:    #FAF6F1   (warm background)
+       --sand:     #F0EBE4   (card backgrounds, hover)
+       --clay:     #E8E0D8   (borders, dividers)
+       --stone:    #B8AFA6   (muted text, placeholders)
+       --ink:      #3D3929   (primary text)
+       --espresso: #2A2520   (headings, sidebar bg)
+       --terracotta: #D4714E (primary accent — warm coral)
+       --terra-light: #F5E6DF (accent backgrounds)
+       --sage:     #5B8C6F   (success / verified)
+       --sage-light: #E8F0EB
+       --amber:    #C49132   (warning / partial)
+       --amber-light: #FBF3E4
+       --sky:      #5B8FB9   (info / potential)
+       --sky-light: #E6EFF6
+       --plum:     #8B6DAF   (cited elsewhere)
+       --plum-light: #F0EBF5
+       --rust:     #C45B4A   (error / not found)
+       --rust-light: #FBEAE8
+    */
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
     /* Global */
-    .stApp { background-color: #F4F4F4; }
+    .stApp {
+        background-color: #FAF6F1;
+    }
 
     /* Headers */
     h1, h2, h3 {
-        color: #2C3E50 !important;
-        font-family: Georgia, 'Times New Roman', serif !important;
-        font-weight: normal;
-        letter-spacing: 0.5px;
+        color: #2A2520 !important;
+        font-family: 'Source Serif 4', Georgia, serif !important;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+    h1 { font-size: 2rem !important; }
+    h3 { font-weight: 500; color: #3D3929 !important; }
+
+    /* Body text */
+    p, span, label, li, div {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     /* Sidebar */
     section[data-testid="stSidebar"] {
-        background-color: #2C3E50;
+        background-color: #2A2520;
     }
     section[data-testid="stSidebar"] h1,
     section[data-testid="stSidebar"] h2,
-    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] h3 {
+        color: #FAF6F1 !important;
+        font-family: 'Source Serif 4', Georgia, serif !important;
+    }
     section[data-testid="stSidebar"] p,
     section[data-testid="stSidebar"] span,
     section[data-testid="stSidebar"] label {
-        color: #F4F4F4 !important;
+        color: #E8E0D8 !important;
+        font-family: 'Inter', sans-serif !important;
     }
     section[data-testid="stSidebar"] hr {
-        border-color: #7F8C8D;
+        border-color: #3D3929;
+        opacity: 0.4;
     }
 
-    /* Buttons */
+    /* Buttons — warm terracotta accent */
     .stButton > button {
-        background-color: #2C3E50 !important;
-        color: #F4F4F4 !important;
-        border: 1px solid #7F8C8D !important;
-        border-radius: 2px !important;
-        font-family: Georgia, serif !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        background-color: #D4714E !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500 !important;
+        font-size: 0.85rem !important;
+        letter-spacing: 0.02em;
+        padding: 0.5rem 1.2rem !important;
+        transition: all 0.2s ease !important;
     }
     .stButton > button:hover {
-        background-color: #7F8C8D !important;
-        color: #F4F4F4 !important;
+        background-color: #B85E3F !important;
+        color: #FFFFFF !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(212, 113, 78, 0.3) !important;
     }
     .stButton > button:disabled {
-        background-color: #7F8C8D !important;
-        opacity: 0.5;
+        background-color: #E8E0D8 !important;
+        color: #B8AFA6 !important;
+        opacity: 0.7;
+    }
+
+    /* Sidebar buttons — subtle on dark */
+    section[data-testid="stSidebar"] .stButton > button {
+        background-color: transparent !important;
+        color: #E8E0D8 !important;
+        border: 1px solid #3D3929 !important;
+        border-radius: 8px !important;
+    }
+    section[data-testid="stSidebar"] .stButton > button:hover {
+        background-color: #3D3929 !important;
+        color: #FAF6F1 !important;
+        transform: none;
+        box-shadow: none !important;
     }
 
     /* Download button */
     .stDownloadButton > button {
-        background-color: #2C3E50 !important;
-        color: #F4F4F4 !important;
-        border: 1px solid #7F8C8D !important;
-        border-radius: 2px !important;
-        font-family: Georgia, serif !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        background-color: #2A2520 !important;
+        color: #FAF6F1 !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.02em;
+        transition: all 0.2s ease !important;
+    }
+    .stDownloadButton > button:hover {
+        background-color: #3D3929 !important;
+        box-shadow: 0 4px 12px rgba(42, 37, 32, 0.2) !important;
     }
 
-    /* File uploader */
+    /* File uploader — warm drop zone */
     section[data-testid="stFileUploader"] {
-        border: 2px dashed #7F8C8D;
-        padding: 1rem;
+        border: 2px dashed #E8E0D8;
+        padding: 2rem 1rem;
         background-color: #FFFFFF;
+        border-radius: 12px;
+        min-height: 200px;
+        transition: border-color 0.2s ease;
+    }
+    section[data-testid="stFileUploader"]:hover {
+        border-color: #D4714E;
+    }
+    section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] {
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+
+    /* Text area */
+    .stTextArea textarea {
+        border: 1px solid #E8E0D8 !important;
+        border-radius: 8px !important;
+        font-family: 'Inter', sans-serif !important;
+        background-color: #FFFFFF !important;
+    }
+    .stTextArea textarea:focus {
+        border-color: #D4714E !important;
+        box-shadow: 0 0 0 2px rgba(212, 113, 78, 0.15) !important;
+    }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0;
+        border-bottom: 1px solid #E8E0D8;
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500;
+        color: #B8AFA6;
+        border-bottom: 2px solid transparent;
+        padding: 0.5rem 1.2rem;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #D4714E !important;
+        border-bottom-color: #D4714E !important;
     }
 
     /* Hide Streamlit branding */
@@ -94,127 +201,225 @@ def inject_era_css():
     footer { visibility: hidden; }
     header { visibility: hidden; }
 
-    /* Audit table */
+    /* Expanders */
+    .streamlit-expanderHeader {
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500;
+        color: #3D3929;
+        background-color: #F0EBE4;
+        border-radius: 8px;
+    }
+
+    /* Info / Warning / Error boxes */
+    .stAlert {
+        border-radius: 8px !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    /* ===== AUDIT TABLE ===== */
     .audit-table {
         width: 100%;
-        border-collapse: collapse;
-        font-family: 'Courier New', 'Roboto Mono', monospace;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-family: 'Inter', sans-serif;
         font-size: 0.85rem;
         margin-top: 1rem;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #E8E0D8;
     }
     .audit-table thead th {
-        background-color: #2C3E50;
-        color: #F4F4F4;
-        padding: 12px 10px;
+        background-color: #2A2520;
+        color: #FAF6F1;
+        padding: 14px 12px;
         text-align: left;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        font-weight: 500;
         font-size: 0.75rem;
-        border-bottom: 2px solid #7F8C8D;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
     }
     .audit-table tbody td {
-        padding: 10px;
-        border-bottom: 1px solid #D5D8DC;
-        color: #2C3E50;
+        padding: 12px;
+        border-bottom: 1px solid #F0EBE4;
+        color: #3D3929;
         vertical-align: top;
+        background-color: #FFFFFF;
     }
-    .audit-table tbody tr:hover {
-        background-color: #EAECEE;
+    .audit-table tbody tr:last-child td {
+        border-bottom: none;
     }
-    .status-verified { color: #27AE60; font-weight: bold; }
-    .status-not-found { color: #C0392B; font-weight: bold; }
-    .status-manual { color: #7F8C8D; font-weight: bold; }
-    .status-error { color: #C0392B; font-weight: bold; }
-    .status-typo { color: #F39C12; font-weight: bold; }
-    .status-potential { color: #3498DB; font-weight: bold; }
-    .status-cited-by { color: #8E44AD; font-weight: bold; }
-    .status-mismatch { color: #E74C3C; font-weight: bold; }
-    .citation-name { font-family: Georgia, serif; font-style: italic; }
-    .action-link {
-        color: #2C3E50;
-        text-decoration: underline;
-        font-family: 'Courier New', monospace;
-        font-size: 0.8rem;
+    .audit-table tbody tr:hover td {
+        background-color: #FAF6F1;
     }
-    .discrepancy-note {
-        font-size: 0.75rem;
-        color: #F39C12;
+
+    /* Status classes */
+    .status-verified { color: #5B8C6F; font-weight: 600; }
+    .status-not-found { color: #C45B4A; font-weight: 600; }
+    .status-manual { color: #B8AFA6; font-weight: 600; }
+    .status-error { color: #C45B4A; font-weight: 600; }
+    .status-typo { color: #C49132; font-weight: 600; }
+    .status-potential { color: #5B8FB9; font-weight: 600; }
+    .status-cited-by { color: #8B6DAF; font-weight: 600; }
+    .status-mismatch { color: #C45B4A; font-weight: 600; }
+
+    .citation-name {
+        font-family: 'Source Serif 4', Georgia, serif;
         font-style: italic;
+        color: #3D3929;
+    }
+
+    /* Action Links */
+    .action-link {
+        color: #D4714E !important;
+        text-decoration: none;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 500;
+        transition: color 0.15s ease;
+    }
+    .action-link:hover {
+        color: #B85E3F !important;
+        text-decoration: underline;
+    }
+
+    /* Notes & Annotations */
+    .discrepancy-note {
+        font-size: 0.8rem;
+        color: #C49132;
         margin-top: 4px;
+        font-style: italic;
     }
     .saflii-citation {
+        font-family: 'JetBrains Mono', monospace;
         font-size: 0.75rem;
-        color: #7F8C8D;
+        color: #5B8FB9;
         margin-top: 2px;
     }
-    .found-via-note {
-        font-size: 0.75rem;
-        color: #2980B9;
-        font-style: italic;
-        margin-top: 4px;
-    }
     .search-trail {
+        font-family: 'JetBrains Mono', monospace;
         font-size: 0.7rem;
-        color: #95A5A6;
+        color: #B8AFA6;
         margin-top: 6px;
-        font-family: 'Courier New', monospace;
-        line-height: 1.3;
+        line-height: 1.4;
     }
     .suggestion-note {
-        color: #27AE60;
+        color: #5B8C6F;
         font-size: 0.85em;
-        margin-top: 4px;
-        padding: 4px 8px;
-        background: #E8F8F0;
-        border-left: 3px solid #27AE60;
+        margin-top: 6px;
+        padding: 6px 10px;
+        background: #E8F0EB;
+        border-left: 3px solid #5B8C6F;
+        border-radius: 0 6px 6px 0;
     }
     .cited-wrong-note {
-        color: #E74C3C;
+        color: #C45B4A;
         font-size: 0.85em;
         margin-top: 4px;
-        padding: 4px 8px;
-        background: #FDEDEC;
-        border-left: 3px solid #E74C3C;
+        padding: 6px 10px;
+        background: #FBEAE8;
+        border-left: 3px solid #C45B4A;
+        border-radius: 0 6px 6px 0;
     }
+
+    /* Confidence Badges */
     .confidence-badge {
         display: inline-block;
-        padding: 2px 6px;
-        border-radius: 3px;
-        font-size: 0.7rem;
-        font-weight: bold;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 500;
     }
-    .confidence-high { background-color: #D5F5E3; color: #1E8449; }
-    .confidence-medium { background-color: #FEF9E7; color: #B7950B; }
-    .confidence-low { background-color: #FADBD8; color: #922B21; }
+    .confidence-high {
+        background-color: #E8F0EB;
+        color: #3D7A52;
+    }
+    .confidence-medium {
+        background-color: #FBF3E4;
+        color: #9A7528;
+    }
+    .confidence-low {
+        background-color: #FBEAE8;
+        color: #A8463A;
+    }
 
-    /* Terminal log */
+    /* ===== EXTRACTION LOG ===== */
     .terminal-log {
-        background-color: #1a1a2e;
-        color: #00ff88;
-        font-family: 'Courier New', monospace;
-        font-size: 0.85rem;
-        padding: 1.2rem;
-        border-radius: 2px;
-        border: 1px solid #7F8C8D;
+        background-color: #2A2520;
+        color: #E8E0D8;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.82rem;
+        padding: 1.5rem;
+        border-radius: 12px;
         max-height: 400px;
         overflow-y: auto;
-        line-height: 1.6;
+        line-height: 1.7;
     }
     .terminal-log .log-header {
-        color: #7F8C8D;
+        color: #B8AFA6;
         margin-bottom: 0.5rem;
     }
-    .terminal-log .log-found { color: #27AE60; }
-    .terminal-log .log-type { color: #F39C12; }
+    .terminal-log .log-found { color: #5B8C6F; }
+    .terminal-log .log-type { color: #D4714E; }
 
     /* Tagline */
     .tagline {
-        font-family: 'Courier New', monospace;
-        color: #7F8C8D;
-        letter-spacing: 3px;
-        font-size: 0.9rem;
+        font-family: 'Inter', sans-serif;
+        color: #B8AFA6;
+        letter-spacing: 0.15em;
+        font-size: 0.8rem;
+        font-weight: 500;
         margin-bottom: 2rem;
+        text-transform: uppercase;
     }
+
+    /* ===== SUMMARY STATS CARDS ===== */
+    .stats-container {
+        display: flex;
+        gap: 14px;
+        margin: 1.2rem 0 1.8rem 0;
+        flex-wrap: wrap;
+    }
+    .stat-card {
+        flex: 1;
+        min-width: 130px;
+        padding: 16px 18px;
+        border-radius: 12px;
+        text-align: center;
+        border-left: 4px solid;
+        background: #FFFFFF;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        transition: box-shadow 0.2s ease;
+    }
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .stat-card .stat-count {
+        font-size: 2rem;
+        font-weight: 600;
+        font-family: 'Source Serif 4', Georgia, serif;
+        line-height: 1;
+    }
+    .stat-card .stat-label {
+        font-size: 0.7rem;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-top: 6px;
+        opacity: 0.7;
+    }
+
+    /* ===== PROGRESS BAR ===== */
+    .stProgress > div > div > div {
+        background-color: #D4714E !important;
+    }
+
+    /* ===== SPINNER ===== */
+    .stSpinner > div {
+        border-top-color: #D4714E !important;
+    }
+
     </style>
     """, unsafe_allow_html=True)
 
@@ -298,7 +503,7 @@ def extract_party_names(citation_string):
     Returns (party_a, party_b) or (None, None) if no 'v' separator found.
     """
     match = re.search(
-        r"([A-Z][A-Za-z\s&()]*?)\s+v\s+([A-Z][A-Za-z\s&()]*?)(?=\s*[\[\(]|\s*\d{4}|\s*SA\b|\s*BCLR\b|\s*SACR\b|\s*All\s|\s*ZA[A-Z]|\s*CCT|\s*$)",
+        r"([A-Z][A-Za-z0-9\s&()/;]*?)\s+v\.?\s+([A-Z][A-Za-z0-9\s&()/;]*?)(?=\s*[\[\(]|\s*\d{4}|\s*SA\b|\s*BCLR\b|\s*SACR\b|\s*BLLR\b|\s*ILJ\b|\s*All\s|\s*ZA[A-Z]|\s*CCT|\s*,?\s*\d{4}|\s*$)",
         citation_string,
     )
     if match:
@@ -327,28 +532,42 @@ class CitationEngine:
         "DCLD", "SECLD", "NCHC", "BCHC", "ECD", "NCD",
     )
 
-    # Character class for party names: letters, spaces, &, parentheses, hyphens
-    # Explicitly excludes newlines and periods (which caused cross-line leaks)
-    _N = r"[A-Za-z\s&()\-']"  # name chars (no period, no comma)
-    _NP = r"[A-Za-z\s&()\-'.,]"  # name chars with period/comma (for "v." and "(Pty)")
+    # Character class for party names: letters, digits, spaces, &, parentheses,
+    # hyphens, apostrophes, forward-slash (t/a), semicolons (consolidated cases),
+    # asterisks (footnote markers).
+    # Explicitly excludes newlines (which caused cross-line leaks).
+    _N = r"[A-Za-z0-9\s&()\-'/;*]"  # name chars (no period, no comma)
+    _NP = r"[A-Za-z0-9\s&()\-'/;*.,]"  # name chars with period/comma (for "v." and "(Pty)")
 
     PATTERNS = {
         # Standard SA Reports (Juta): Case Name 1995 (3) SA 391 (CC)
-        "standard_sa": r"([A-Z]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d{4})\s\((\d+)\)\sSA\s(\d+)\s\(([A-Z]+)\)",
+        "standard_sa": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d{4})\s\((\d+)\)\sSA\s(\d+)\s\(([A-Z]+)\)",
         # BCLR (LexisNexis): Case Name 1995 (6) BCLR 665 (CC)
-        "bclr": r"([A-Z]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d{4})\s\((\d+)\)\sBCLR\s(\d+)\s\(([A-Z]+)\)",
+        "bclr": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d{4})\s\((\d+)\)\sBCLR\s(\d+)\s\(([A-Z]+)\)",
+        # BCLR dual citation: Case Name 2015 (11) BCLR 1319 (2016 (3) SA 37)
+        "bclr_dual": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d{4})\s\((\d+)\)\sBCLR\s(\d+)\s\(\d{4}\s\(\d+\)\sSA\s(\d+)\)",
         # SACR: Case Name 1995 (2) SACR 1 (CC)
-        "sacr": r"([A-Z]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d{4})\s\((\d+)\)\sSACR\s(\d+)\s\(([A-Z]+)\)",
+        "sacr": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d{4})\s\((\d+)\)\sSACR\s(\d+)\s\(([A-Z]+)\)",
         # All SA (LexisNexis): Case Name 2002 (4) All SA 145 (SCA)
-        "all_sa": r"([A-Z]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d{4})\s\((\d+)\)\sAll\sSA\s(\d+)\s\(([A-Z]+)\)",
+        "all_sa": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d{4})\s\((\d+)\)\sAll\sSA\s(\d+)\s\(([A-Z]+)\)",
         # Old provincial: Blotnick v. Turecki, 1944 CPD 100
-        "old_provincial": r"([A-Z]" + _NP + r"+?v\.?\s" + _NP + r"+?),?\s(\d{4})\s(CPD|TPD|WLD|NPD|OPD|EPD|AD|SCA|DCLD|SECLD|NCHC|BCHC|ECD|NCD)\s(\d+)",
+        "old_provincial": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?),?\s(\d{4})\s(CPD|TPD|WLD|NPD|OPD|EPD|AD|SCA|DCLD|SECLD|NCHC|BCHC|ECD|NCD)\s(\d+)",
+        # BLLR (Butterworths): Case Name [2012] 3 BLLR 211 (CC)
+        "bllr": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s\[(\d{4})\]\s(\d+)\sBLLR\s(\d+)\s\(([A-Z]+)\)",
+        # ILJ (Industrial Law Journal): Case Name (2017) 38 ILJ 295 (CC)
+        "ilj": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s\((\d{4})\)\s(\d+)\sILJ\s(\d+)\s\(([A-Z]+)\)",
+        # ILJ alternate: vol (ILJ) page (court) — e.g. Kruger v Aciel 37 (ILJ) 2567 (LAC)
+        "ilj_alt": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d+)\s\(ILJ\)\s(\d+)\s\(([A-Z]+)\)",
         # Neutral SCA: Case Name [2023] ZASCA 15
-        "neutral_zasca": r"([A-Z]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s\[(\d{4})\]\sZASCA\s(\d+)",
+        "neutral_zasca": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s\[(\d{4})\]\sZASCA\s(\d+)",
         # Constitutional Court: [2022] ZACC 45
-        "neutral_zacc": r"([A-Z]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s\[(\d{4})\]\sZACC\s(\d+)",
+        "neutral_zacc": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s\[(\d{4})\]\sZACC\s(\d+)",
         # Regional (captures court code): [2023] ZAWCHC 12
-        "neutral_regional": r"([A-Z]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s\[(\d{4})\]\s(ZA[A-Z]{2,8})\s(\d+)",
+        "neutral_regional": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s\[(\d{4})\]\s(ZA[A-Z]{2,8})\s(\d+)",
+        # Loose/malformed SA citation: catches near-miss formats like
+        # "Name v Name ... 1997 3 SA 214" (missing parentheses/court code)
+        # Data tuple: (name, year, vol_or_empty, page)
+        "loose_sa": r"([A-Z*]" + _NP + r"+?v\.?\s" + _NP + r"+?)\s(\d{4})\s+(\d*)\s*(?:SA|BCLR|SACR)\s(\d+)",
     }
 
     # Patterns for footnote citations (name and citation on separate lines)
@@ -358,17 +577,102 @@ class CitationEngine:
         "bclr": r"(\d{4})\s\((\d+)\)\sBCLR\s(\d+)\s\(([A-Z]+)\)",
         "sacr": r"(\d{4})\s\((\d+)\)\sSACR\s(\d+)\s\(([A-Z]+)\)",
         "all_sa": r"(\d{4})\s\((\d+)\)\sAll\sSA\s(\d+)\s\(([A-Z]+)\)",
+        "bllr": r"\[(\d{4})\]\s(\d+)\sBLLR\s(\d+)\s\(([A-Z]+)\)",
+        "ilj": r"\((\d{4})\)\s(\d+)\sILJ\s(\d+)\s\(([A-Z]+)\)",
     }
+
+    @staticmethod
+    def _join_split_lines(text):
+        """Join lines that were split mid-citation by PDF extraction.
+
+        PDF renderers break lines at page-width boundaries, splitting citations
+        across two (sometimes three) lines. This method joins consecutive lines
+        into pairs so that a second-pass regex search can find them.
+
+        Returns a list of joined-pair strings (line_i + " " + line_i+1).
+        """
+        lines = text.split("\n")
+        pairs = []
+        for i in range(len(lines) - 1):
+            a = lines[i].strip()
+            b = lines[i + 1].strip()
+            if a and b:
+                pairs.append(a + " " + b)
+        # Also join triplets for citations split across 3 lines
+        for i in range(len(lines) - 2):
+            a = lines[i].strip()
+            b = lines[i + 1].strip()
+            c = lines[i + 2].strip()
+            if a and b and c:
+                pairs.append(a + " " + b + " " + c)
+        return pairs
+
+    @staticmethod
+    def _dedup_key(label, data):
+        """Build a dedup key from citation metadata (reporter + year + page).
+
+        Uses the citation's year and page number (or judgment number for
+        neutral citations) so that the same case found with different
+        amounts of leading noise in the party-name capture still deduplicates.
+        """
+        # Map pattern labels to the tuple indices for year and page/number
+        # Most patterns: (name, year, vol, page, court) → year=1, page=3
+        idx_map = {
+            "standard_sa":     (1, 3),
+            "bclr":            (1, 3),
+            "bclr_dual":       (1, 3),
+            "sacr":            (1, 3),
+            "all_sa":          (1, 3),
+            "old_provincial":  (1, 3),
+            "bllr":            (1, 3),
+            "ilj":             (1, 3),
+            "ilj_alt":         (0, 2),   # (name, vol, page, court) — no year
+            "neutral_zasca":   (1, 2),   # (name, year, number)
+            "neutral_zacc":    (1, 2),
+            "neutral_regional":(1, 3),   # (name, year, court, number)
+            "loose_sa":        (1, 3),
+        }
+        yi, pi = idx_map.get(label, (1, 3))
+        year = data[yi] if yi < len(data) else ""
+        page = data[pi] if pi < len(data) else ""
+        return f"{label}|{year}|{page}"
+
+    @staticmethod
+    def _cross_dedup_key(label, data):
+        """Build a label-agnostic dedup key to catch the same citation matched
+        by different pattern types (e.g. neutral_zacc vs neutral_regional)."""
+        idx_map = {
+            "standard_sa":     (1, 3),
+            "bclr":            (1, 3),
+            "bclr_dual":       (1, 3),
+            "sacr":            (1, 3),
+            "all_sa":          (1, 3),
+            "old_provincial":  (1, 3),
+            "bllr":            (1, 3),
+            "ilj":             (1, 3),
+            "ilj_alt":         (0, 2),
+            "neutral_zasca":   (1, 2),
+            "neutral_zacc":    (1, 2),
+            "neutral_regional":(1, 3),
+            "loose_sa":        (1, 3),
+        }
+        yi, pi = idx_map.get(label, (1, 3))
+        year = data[yi] if yi < len(data) else ""
+        page = data[pi] if pi < len(data) else ""
+        return f"{year}|{page}"
 
     def extract_citations(self, text):
         found = []
-        seen = set()
+        seen = set()        # primary: label + year + page
+        seen_cross = set()  # secondary: year + page (cross-pattern dedup)
 
         # Run inline patterns per-line to prevent cross-line matches
         lines = text.split("\n")
         ordered_keys = [
-            "standard_sa", "bclr", "sacr", "all_sa", "old_provincial",
+            "standard_sa", "bclr", "bclr_dual", "sacr", "all_sa",
+            "old_provincial", "bllr", "ilj", "ilj_alt",
             "neutral_zasca", "neutral_zacc", "neutral_regional",
+            "loose_sa",
         ]
         for line in lines:
             line = line.strip()
@@ -378,16 +682,29 @@ class CitationEngine:
                 pattern = self.PATTERNS[label]
                 matches = re.findall(pattern, line)
                 for m in matches:
-                    case_name = m[0].strip().rstrip(",. ")
-                    year = m[1]
-                    dedup_key = f"{case_name.lower()}|{year}"
-
-                    if label == "neutral_regional" and dedup_key in seen:
+                    dk = self._dedup_key(label, m)
+                    xk = self._cross_dedup_key(label, m)
+                    if dk in seen or xk in seen_cross:
                         continue
-                    if label in ("bclr", "sacr", "all_sa") and dedup_key in seen:
-                        continue
+                    seen.add(dk)
+                    seen_cross.add(xk)
+                    found.append({"type": label, "data": m})
 
-                    seen.add(dedup_key)
+        # --- Second pass: join split lines and re-search ---
+        # PDF extraction often breaks citations across 2-3 lines.
+        # Join adjacent line pairs/triplets and search again.
+        joined_lines = self._join_split_lines(text)
+        for joined in joined_lines:
+            for label in ordered_keys:
+                pattern = self.PATTERNS[label]
+                matches = re.findall(pattern, joined)
+                for m in matches:
+                    dk = self._dedup_key(label, m)
+                    xk = self._cross_dedup_key(label, m)
+                    if dk in seen or xk in seen_cross:
+                        continue
+                    seen.add(dk)
+                    seen_cross.add(xk)
                     found.append({"type": label, "data": m})
 
         # --- Footnote recovery: find orphan citations without party names ---
@@ -428,11 +745,11 @@ class CitationEngine:
                         continue
                     # Look for "A v B" pattern, possibly ending with footnote number
                     name_match = re.search(
-                        r"([A-Z][A-Za-z\s&()\-'.,]+?v\.?\s[A-Za-z\s&()\-'.,]+?)(?:\s*\d*\s*$)",
+                        r"([A-Z*][A-Za-z0-9\s&()\-'/;*.,]+?v\.?\s[A-Za-z0-9\s&()\-'/;*.,]+?)(?:\s*\d*\s*$)",
                         prev_line,
                     )
                     if name_match:
-                        party_name = name_match.group(1).strip().rstrip(",. 0123456789")
+                        party_name = name_match.group(1).strip().rstrip(",. *0123456789")
                         break
 
                 if party_name:
@@ -523,11 +840,11 @@ def throttled_get(session, url, **kwargs):
 # ---------------------------------------------------------------------------
 
 CONFIDENCE_TIERS = {
-    "EXACT_MATCH":           {"label": "Verified",        "colour": "#27AE60", "css_class": "status-verified"},
-    "PARTIAL_MATCH":         {"label": "Likely Match",    "colour": "#F39C12", "css_class": "status-typo"},
-    "POTENTIAL_MATCH":       {"label": "Possible Match",  "colour": "#3498DB", "css_class": "status-potential"},
-    "CITED_IN_OTHER_CASES":  {"label": "Cited Elsewhere", "colour": "#8E44AD", "css_class": "status-cited-by"},
-    "NOT_FOUND":             {"label": "Not Found",       "colour": "#E74C3C", "css_class": "status-not-found"},
+    "EXACT_MATCH":           {"label": "Verified",        "colour": "#5B8C6F", "css_class": "status-verified"},
+    "PARTIAL_MATCH":         {"label": "Likely Match",    "colour": "#C49132", "css_class": "status-typo"},
+    "POTENTIAL_MATCH":       {"label": "Possible Match",  "colour": "#5B8FB9", "css_class": "status-potential"},
+    "CITED_IN_OTHER_CASES":  {"label": "Cited Elsewhere", "colour": "#8B6DAF", "css_class": "status-cited-by"},
+    "NOT_FOUND":             {"label": "Not Found",       "colour": "#C45B4A", "css_class": "status-not-found"},
 }
 
 CONFIDENCE_LABELS = {
@@ -568,10 +885,12 @@ def _classify_confidence(status, match_confidence, found_via, citation_data):
     if status in ("found", "typo_detected") and found_via == "SAFLII":
         return "POTENTIAL_MATCH"
 
-    # Old provincial citations that aren't on SAFLII
-    ctype = citation_data.get("type", "")
-    if status == "not_found" and ctype == "old_provincial":
+    # Case not on SAFLII itself, but cited/referenced in other cases
+    if status == "cited_in_other_cases":
         return "CITED_IN_OTHER_CASES"
+
+    # Old provincial citations are NOT automatically "cited elsewhere"
+    # — only classify as CITED_IN_OTHER_CASES if the search actually found citing cases
 
     # Nothing found on SAFLII
     return "NOT_FOUND"
@@ -625,7 +944,8 @@ class SafliiBridge:
         display = format_citation_display(citation_data)
 
         party_a, party_b = extract_party_names(display)
-        doc_year = data[1]
+        # Year is at data[1] for most types, but ilj_alt has no year (data = name, vol, page, court)
+        doc_year = data[1] if ctype != "ilj_alt" else ""
 
         search_trail = []
         mismatch_info = None  # stashed when direct URL hits wrong case
@@ -725,6 +1045,24 @@ class SafliiBridge:
                     search_trail.append({"source": "SAFLII (search)", "result": "Same wrong case found"})
             else:
                 search_trail.append({"source": "SAFLII (search)", "result": "No matching case"})
+                # Search returned results but none matched — case is cited by others
+                citing_count = len(search_results)
+                search_trail.append({
+                    "source": "SAFLII (cited-by)",
+                    "result": f"Referenced in {citing_count} other case{'s' if citing_count != 1 else ''}",
+                })
+                # Return as cited_in_other_cases with the search link and count
+                not_found = self._not_found_result(citation_data, search_trail)
+                not_found["status"] = "cited_in_other_cases"
+                not_found["citing_cases_count"] = citing_count
+                # Pick a representative citing case for context
+                top_citing = search_results[0]
+                not_found["top_citing_title"] = top_citing.get("title", "")
+                not_found["top_citing_url"] = top_citing.get("url", "")
+                return self._add_standard_keys(not_found,
+                    search_trail=search_trail,
+                    found_via="SAFLII",
+                )
         else:
             search_trail.append({"source": "SAFLII (search)", "result": "No results"})
 
@@ -789,29 +1127,19 @@ class SafliiBridge:
         else:
             query = f"{party_a} v {party_b}"
 
-        # Determine court filter
+        # Normalize "v." to "v" — old-fashioned form hurts search results
+        query = re.sub(r'\bv\.\s', 'v ', query)
+
+        # No court filter — search across all SA courts for maximum recall.
+        # The fuzzy matching step will verify the correct case is selected.
         ctype = citation_data["type"]
         data = citation_data["data"]
         court_filter = None
 
-        if ctype in ("standard_sa", "bclr", "sacr", "all_sa"):
-            # Court abbreviation is in the parenthetical, e.g. (CC)
-            court_abbrev = data[4]
-            resolved = resolve_court_code(court_abbrev)
-            if resolved in VALID_COURT_CODES:
-                court_filter = resolved
-        elif ctype == "old_provincial":
-            # Old provincial: data = (name, year, division, page)
-            court_abbrev = data[2]
-            resolved = resolve_court_code(court_abbrev)
-            if resolved in VALID_COURT_CODES:
-                court_filter = resolved
-        elif ctype == "neutral_zasca":
-            court_filter = "ZASCA"
-        elif ctype == "neutral_zacc":
-            court_filter = "ZACC"
-        elif ctype == "neutral_regional":
-            court_filter = resolve_court_code(data[2])
+        if ctype == "old_provincial":
+            # Old provincial: search with full citation string (not just party names)
+            # because citing cases contain the full reference in their text
+            query = re.sub(r'\bv\.\s', 'v ', display)
 
         params = {
             "query": query,
@@ -1136,27 +1464,69 @@ def extract_text(uploaded_file):
         return ""
 
 
+def _clean_party_name(raw_name):
+    """Strip leading noise from a party name captured from joined lines.
+
+    PDF line-joining can prepend unrelated text before the actual party name.
+    We find the last occurrence of a plausible party name start (uppercase word
+    followed eventually by 'v') and discard anything before it.
+    Also strips footnote markers like leading * or trailing footnote numbers.
+    """
+    name = raw_name.strip().lstrip("*").strip()
+    # If the name contains 'v' (the versus separator), try to trim leading junk
+    v_match = re.search(r'\bv\.?\s', name)
+    if v_match:
+        # Walk backwards from the 'v' to find where the real party name starts
+        before_v = name[:v_match.start()]
+        # Find the last sentence-ending punctuation or footnote number before
+        # the actual party name. Common noise patterns:
+        # "...some text. 15 Aviation Union" or "...transaction 14 Swanepoel"
+        trim_match = re.search(
+            r'(?:^|[.;:!?"\])])\s*(?:\d+\s+)?([A-Z*])',
+            before_v,
+        )
+        if trim_match:
+            start = trim_match.start(1)
+            name = name[start:]
+    name = name.strip().lstrip("*").strip()
+    # Strip trailing footnote numbers
+    name = re.sub(r'\s*\d+\s*$', '', name)
+    return name
+
+
 def format_citation_display(citation):
     """Format a citation dict into a human-readable string."""
     ctype = citation["type"]
     data = citation["data"]
+    name = _clean_party_name(data[0])
 
     if ctype == "standard_sa":
-        return f"{data[0].strip()} {data[1]} ({data[2]}) SA {data[3]} ({data[4]})"
+        return f"{name} {data[1]} ({data[2]}) SA {data[3]} ({data[4]})"
     elif ctype == "bclr":
-        return f"{data[0].strip()} {data[1]} ({data[2]}) BCLR {data[3]} ({data[4]})"
+        return f"{name} {data[1]} ({data[2]}) BCLR {data[3]} ({data[4]})"
+    elif ctype == "bclr_dual":
+        return f"{name} {data[1]} ({data[2]}) BCLR {data[3]}"
     elif ctype == "sacr":
-        return f"{data[0].strip()} {data[1]} ({data[2]}) SACR {data[3]} ({data[4]})"
+        return f"{name} {data[1]} ({data[2]}) SACR {data[3]} ({data[4]})"
     elif ctype == "all_sa":
-        return f"{data[0].strip()} {data[1]} ({data[2]}) All SA {data[3]} ({data[4]})"
+        return f"{name} {data[1]} ({data[2]}) All SA {data[3]} ({data[4]})"
     elif ctype == "old_provincial":
-        return f"{data[0].strip()} {data[1]} {data[2]} {data[3]}"
+        return f"{name} {data[1]} {data[2]} {data[3]}"
+    elif ctype == "bllr":
+        return f"{name} [{data[1]}] {data[2]} BLLR {data[3]} ({data[4]})"
+    elif ctype == "ilj":
+        return f"{name} ({data[1]}) {data[2]} ILJ {data[3]} ({data[4]})"
+    elif ctype == "ilj_alt":
+        return f"{name} {data[1]} (ILJ) {data[2]} ({data[3]})"
     elif ctype == "neutral_zasca":
-        return f"{data[0].strip()} [{data[1]}] ZASCA {data[2]}"
+        return f"{name} [{data[1]}] ZASCA {data[2]}"
     elif ctype == "neutral_zacc":
-        return f"{data[0].strip()} [{data[1]}] ZACC {data[2]}"
+        return f"{name} [{data[1]}] ZACC {data[2]}"
     elif ctype == "neutral_regional":
-        return f"{data[0].strip()} [{data[1]}] {data[2]} {data[3]}"
+        return f"{name} [{data[1]}] {data[2]} {data[3]}"
+    elif ctype == "loose_sa":
+        vol = f" ({data[2]})" if data[2] else ""
+        return f"{name} {data[1]}{vol} SA {data[3]}"
 
     return str(data)
 
@@ -1166,12 +1536,17 @@ def citation_type_label(ctype):
     labels = {
         "standard_sa": "SA Reports (Juta)",
         "bclr": "BCLR (LexisNexis)",
+        "bclr_dual": "BCLR (Dual Citation)",
         "sacr": "SACR",
         "all_sa": "All SA (LexisNexis)",
         "old_provincial": "Old Provincial",
+        "bllr": "BLLR (Butterworths)",
+        "ilj": "ILJ (Industrial Law Journal)",
+        "ilj_alt": "ILJ (Alternate Format)",
         "neutral_zasca": "SCA (Neutral)",
         "neutral_zacc": "CC (Neutral)",
         "neutral_regional": "Regional (Neutral)",
+        "loose_sa": "Malformed Citation",
     }
     return labels.get(ctype, ctype)
 
@@ -1326,7 +1701,7 @@ def init_session_state():
 
 
 # ---------------------------------------------------------------------------
-# Screen: The Hopper (Upload)
+# Screen: Add Citations (Upload / Paste)
 # ---------------------------------------------------------------------------
 
 def render_hopper():
@@ -1339,37 +1714,69 @@ def render_hopper():
         unsafe_allow_html=True,
     )
 
-    st.markdown("### The Hopper")
-    st.markdown("Upload a Heads of Argument or legal document (.docx or .pdf) to begin citation extraction.")
+    st.markdown("### Add Citations to Verify")
+    st.markdown("Upload a document or paste citations directly to begin extraction.")
 
-    uploaded = st.file_uploader(
-        "Drop your .docx or .pdf file here",
-        type=["docx", "pdf"],
-        key="file_uploader",
-    )
+    tab_upload, tab_paste = st.tabs(["Upload File", "Paste Text"])
 
-    if uploaded is not None and (
-        st.session_state.filename != uploaded.name
-    ):
-        st.session_state.filename = uploaded.name
-        with st.spinner("Extracting text..."):
-            text = extract_text(uploaded)
-            st.session_state.uploaded_text = text
+    with tab_upload:
+        uploaded_files = st.file_uploader(
+            "Drop your .docx or .pdf files here",
+            type=["docx", "pdf"],
+            key="file_uploader",
+            accept_multiple_files=True,
+        )
 
-        engine = CitationEngine()
-        citations = engine.extract_citations(text)
-        st.session_state.citations = citations
-        st.session_state.audit_results = []
-        st.session_state.audit_complete = False
-        st.session_state.downloaded_pdfs = {}
+        if uploaded_files:
+            # Build a combined fingerprint of all filenames to detect changes
+            current_names = sorted(f.name for f in uploaded_files)
+            combined_name = " + ".join(current_names) if len(current_names) > 1 else current_names[0]
+
+            if st.session_state.filename != combined_name:
+                st.session_state.filename = combined_name
+                all_text = []
+                with st.spinner(f"Extracting text from {len(uploaded_files)} file{'s' if len(uploaded_files) > 1 else ''}..."):
+                    for f in uploaded_files:
+                        text = extract_text(f)
+                        if text:
+                            all_text.append(text)
+
+                combined_text = "\n\n".join(all_text)
+                st.session_state.uploaded_text = combined_text
+
+                engine = CitationEngine()
+                citations = engine.extract_citations(combined_text)
+                st.session_state.citations = citations
+                st.session_state.audit_results = []
+                st.session_state.audit_complete = False
+                st.session_state.downloaded_pdfs = {}
+
+    with tab_paste:
+        pasted = st.text_area(
+            "Paste citations here (one per line, or a block of text containing citations)",
+            height=200,
+            key="pasted_text",
+            placeholder="e.g. Barkhuizen v Napier 2007 (5) SA 323 (CC)\n     Minister of Health v Treatment Action Campaign [2002] ZACC 15",
+        )
+        if st.button("EXTRACT CITATIONS", key="extract_pasted", use_container_width=True):
+            if pasted and pasted.strip():
+                st.session_state.filename = "Pasted Text"
+                st.session_state.uploaded_text = pasted
+                engine = CitationEngine()
+                citations = engine.extract_citations(pasted)
+                st.session_state.citations = citations
+                st.session_state.audit_results = []
+                st.session_state.audit_complete = False
+                st.session_state.downloaded_pdfs = {}
+                st.rerun()
 
     # Terminal log
     if st.session_state.citations:
         log_lines = [
             '<div class="terminal-log">',
-            '<div class="log-header">--- CITATION EXTRACTION LOG ---</div>',
+            '<div class="log-header">--- CITATIONS EXTRACTED FROM DOCUMENT ---</div>',
             f'<div class="log-header">File: {st.session_state.filename}</div>',
-            f'<div class="log-header">Citations found: {len(st.session_state.citations)}</div>',
+            f'<div class="log-header">Citations extracted: {len(st.session_state.citations)} (not yet verified)</div>',
             "<br>",
         ]
 
@@ -1377,7 +1784,7 @@ def render_hopper():
             display = format_citation_display(c)
             type_label = citation_type_label(c["type"])
             log_lines.append(
-                f'<div><span class="log-found">[FOUND]</span> '
+                f'<div><span class="log-found">[{i:03d}]</span> '
                 f'<span class="log-type">[{type_label}]</span> '
                 f"{display}</div>"
             )
@@ -1401,7 +1808,7 @@ def run_saflii_audit():
     citations = st.session_state.citations
     results = []
 
-    progress = st.progress(0, text="Searching SAFLII, Judiciary, and web...")
+    progress = st.progress(0, text="Searching SAFLII...")
 
     for i, c in enumerate(citations):
         display = format_citation_display(c)
@@ -1461,6 +1868,28 @@ def render_auditor():
         f"**Date:** {date.today().strftime('%d %B %Y')}"
     )
 
+    # Summary stats cards
+    tier_counts = {}
+    for r in st.session_state.audit_results:
+        tier = r["saflii"].get("confidence_tier", "NOT_FOUND")
+        tier_counts[tier] = tier_counts.get(tier, 0) + 1
+
+    stats_html = '<div class="stats-container">'
+    for tier_key, tier_info in CONFIDENCE_TIERS.items():
+        count = tier_counts.get(tier_key, 0)
+        colour = tier_info["colour"]
+        label = tier_info["label"]
+        # Light background derived from the tier colour
+        stats_html += (
+            f'<div class="stat-card" style="border-left-color: {colour}; '
+            f'background: {colour}15;">'
+            f'<div class="stat-count" style="color: {colour};">{count}</div>'
+            f'<div class="stat-label">{label}</div>'
+            f'</div>'
+        )
+    stats_html += '</div>'
+    st.markdown(stats_html, unsafe_allow_html=True)
+
     # Build HTML audit table
     rows_html = ""
     for i, r in enumerate(st.session_state.audit_results, 1):
@@ -1487,9 +1916,9 @@ def render_auditor():
 
         # Add sub-status for typos and mismatches
         if status == "mismatch_resolved":
-            status_html = f'<span style="color:{tier_colour};font-weight:bold;">{tier_label}</span><br/><span style="font-size:0.75em;color:#E67E22;">WRONG CASE</span>'
+            status_html = f'<span style="color:{tier_colour};font-weight:bold;">{tier_label}</span><br/><span style="font-size:0.75em;color:#C49132;">WRONG CASE</span>'
         elif status == "typo_detected":
-            status_html = f'<span style="color:{tier_colour};font-weight:bold;">{tier_label}</span><br/><span style="font-size:0.75em;color:#E67E22;">TYPO DETECTED</span>'
+            status_html = f'<span style="color:{tier_colour};font-weight:bold;">{tier_label}</span><br/><span style="font-size:0.75em;color:#C49132;">TYPO DETECTED</span>'
         elif status == "timeout":
             status_html = '<span class="status-error">TIMEOUT</span>'
         elif status == "error":
@@ -1524,6 +1953,20 @@ def render_auditor():
                     f'SAFLII says {year_disc["saflii"]}'
                     f'</div>'
                 )
+        elif status == "cited_in_other_cases":
+            citing_count = r["saflii"].get("citing_cases_count", 0)
+            top_title = r["saflii"].get("top_citing_title", "")
+            source_html = (
+                f'<div style="color:#8B6DAF;font-size:0.85rem;">'
+                f'Not on SAFLII, but referenced in <strong>{citing_count}</strong> '
+                f'other case{"s" if citing_count != 1 else ""}'
+                f'</div>'
+            )
+            if top_title:
+                source_html += (
+                    f'<div style="font-size:0.8rem;color:#B8AFA6;margin-top:2px;">'
+                    f'e.g. {top_title[:70]}…</div>'
+                )
         elif status == "not_found":
             source_html = "---"
         else:
@@ -1547,7 +1990,7 @@ def render_auditor():
                 conf_class = "confidence-low"
             confidence_html = f'<span class="confidence-badge {conf_class}">{confidence}%</span>'
         else:
-            confidence_html = '<span style="color: #7F8C8D;">---</span>'
+            confidence_html = '<span style="color: #B8AFA6;">---</span>'
 
         # Action cell
         if status == "mismatch_resolved":
@@ -1556,6 +1999,12 @@ def render_auditor():
                 f' &nbsp;|&nbsp; '
                 f'<a href="{url}" target="_blank" class="action-link">Suggested</a>'
             )
+        elif status == "cited_in_other_cases":
+            action_html = f'<a href="{url}" target="_blank" class="action-link">View Citing Cases</a>'
+        elif status == "not_found":
+            action_html = f'<a href="{url}" target="_blank" class="action-link">Search SAFLII</a>'
+        elif status in ("found", "typo_detected"):
+            action_html = f'<a href="{url}" target="_blank" class="action-link">View Source</a>'
         else:
             action_html = f'<a href="{url}" target="_blank" class="action-link">View Source</a>'
 
@@ -1671,7 +2120,7 @@ def render_auditor():
             col1, col2 = st.columns([0.75, 0.25])
             with col1:
                 st.markdown(
-                    f'<p style="color: #2C3E50; font-family: Georgia, serif; '
+                    f'<p style="color: #3D3929; font-family: Source Serif 4, Georgia, serif; '
                     f'font-size: 0.95rem; margin: 0.5rem 0;">'
                     f'<strong>Ref {idx:03d}:</strong> '
                     f'<em>{r["display"][:70]}</em></p>',
@@ -1721,7 +2170,7 @@ def render_auditor():
             has_flynotes = True
             with st.expander(f"Ref {i:03d} - {r['display'][:60]}"):
                 st.markdown(
-                    f'<p style="font-family: Georgia, serif; color: #2C3E50; '
+                    f'<p style="font-family: Source Serif 4, Georgia, serif; color: #3D3929; '
                     f'line-height: 1.6;">{flynote[:2000]}</p>',
                     unsafe_allow_html=True,
                 )
@@ -1737,7 +2186,7 @@ def render_auditor():
     st.download_button(
         label="DOWNLOAD CERTIFICATE OF ACCURACY",
         data=cert,
-        file_name=f"citation_audit_{date.today().strftime('%Y%m%d')}.md",
+        file_name=f"citation_audit_{st.session_state.filename.rsplit('.', 1)[0]}_{date.today().strftime('%Y%m%d')}.md" if st.session_state.filename else f"citation_audit_{date.today().strftime('%Y%m%d')}.md",
         mime="text/markdown",
         use_container_width=True,
     )
@@ -1799,14 +2248,20 @@ def main():
     with st.sidebar:
         st.markdown("## CITATION CHECKER")
         st.markdown(
-            '<p style="font-family: Courier New, monospace; font-size: 0.75rem; '
-            'letter-spacing: 2px; color: #7F8C8D;">VERIFY / AUDIT / CERTIFY</p>',
+            '<p style="font-family: Inter, sans-serif; font-size: 0.7rem; '
+            'letter-spacing: 0.15em; color: #B8AFA6; font-weight: 500;">VERIFY / AUDIT / CERTIFY</p>',
             unsafe_allow_html=True,
         )
         st.markdown("---")
 
-        if st.button("The Hopper", use_container_width=True):
+        if st.button("Add Citations", use_container_width=True):
             st.session_state.current_screen = "hopper"
+            st.session_state.uploaded_text = None
+            st.session_state.citations = []
+            st.session_state.audit_results = []
+            st.session_state.filename = None
+            st.session_state.audit_complete = False
+            st.session_state.downloaded_pdfs = {}
             st.rerun()
         if st.button("The Auditor", use_container_width=True):
             st.session_state.current_screen = "auditor"
@@ -1822,11 +2277,18 @@ def main():
             st.markdown(f"**File:** {st.session_state.filename}")
             st.markdown(f"**Citations:** {len(st.session_state.citations)}")
             if st.session_state.audit_complete:
-                verified = sum(
-                    1 for r in st.session_state.audit_results
-                    if r["saflii"]["status"] in ("found", "typo_detected")
-                )
-                st.markdown(f"**Verified:** {verified}/{len(st.session_state.audit_results)}")
+                total = len(st.session_state.audit_results)
+                for tier_key, tier_info in CONFIDENCE_TIERS.items():
+                    count = sum(
+                        1 for r in st.session_state.audit_results
+                        if r["saflii"].get("confidence_tier") == tier_key
+                    )
+                    if count > 0:
+                        st.markdown(
+                            f'<span style="color:{tier_info["colour"]};">●</span> '
+                            f'**{tier_info["label"]}:** {count}',
+                            unsafe_allow_html=True,
+                        )
 
     # Dispatch
     screen = st.session_state.current_screen
