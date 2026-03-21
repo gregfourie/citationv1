@@ -955,10 +955,10 @@ class SafliiBridge:
         if ctype in ("neutral_zasca", "neutral_zacc", "neutral_regional"):
             direct_url = self._build_direct_url(citation_data)
             if direct_url:
+                direct_citation = extract_citation_from_url(direct_url)
                 result = self._fetch_judgment(direct_url)
-                if result["status"] == "found":
-                    direct_citation = extract_citation_from_url(direct_url)
 
+                if result["status"] == "found":
                     if party_a:
                         title = result.get("title", "")
                         name_score = fuzz.token_set_ratio(
@@ -996,7 +996,90 @@ class SafliiBridge:
                             found_via="SAFLII",
                         )
                 else:
-                    search_trail.append({"source": "SAFLII (direct)", "result": "Not found"})
+                    # Direct URL returned 404/410/error — but for neutral citations
+                    # the URL is deterministic (court/year/number maps to exactly one
+                    # case). A 410 usually means SAFLII blocked our server IP, not
+                    # that the case doesn't exist. Provide the URL for the user's
+                    # browser and try a citation-based search next.
+                    search_trail.append({"source": "SAFLII (direct)", "result": "Not found (may be IP-blocked)"})
+
+        # ---- Step 1b: Targeted search for neutral citations ----
+        # When the direct URL was blocked (410) or failed, search SAFLII using
+        # party names + court code. This is far more precise than a generic
+        # name-only search because the court code narrows results dramatically.
+        # e.g. "CCI Umhlanga v Mobile Telephone Networks ZALCJHB" → 1 result.
+        if ctype in ("neutral_zasca", "neutral_zacc", "neutral_regional") and not mismatch_info:
+            court_code = None
+            if ctype == "neutral_zasca":
+                court_code = "ZASCA"
+            elif ctype == "neutral_zacc":
+                court_code = "ZACC"
+            elif ctype == "neutral_regional":
+                court_code = data[2]  # e.g. "ZALCJHB"
+
+            if court_code and party_a:
+                targeted_query = f"{party_a} v {party_b} {court_code}"
+                targeted_query = targeted_query.replace("&", " ")
+                targeted_query = re.sub(r'\s{2,}', ' ', targeted_query).strip()
+
+                cit_params = {
+                    "query": targeted_query,
+                    "method": "all",
+                    "results": "10",
+                    "meta": "/saflii",
+                }
+                try:
+                    cit_resp = throttled_get(self.session, SEARCH_URL, params=cit_params)
+                    if cit_resp.status_code == 200:
+                        cit_resp.encoding = "windows-1252"
+                        cit_soup = BeautifulSoup(cit_resp.text, "html.parser")
+                        targeted_results = []
+                        for li in cit_soup.find_all("li"):
+                            link = li.find("a")
+                            if not link or not link.get("href"):
+                                continue
+                            href = link["href"]
+                            if "/cases/" not in href:
+                                continue
+                            full_url = self._normalize_url(href)
+                            found_citation = extract_citation_from_url(full_url)
+                            title = link.get_text(strip=True)
+                            targeted_results.append({
+                                "title": title,
+                                "url": full_url,
+                                "citation": found_citation,
+                            })
+
+                        # Fuzzy match the targeted results with strong year preference
+                        for tr in targeted_results:
+                            tr_year = None
+                            if tr.get("citation"):
+                                m = re.search(r'\[(\d{4})\]', tr["citation"])
+                                if m:
+                                    tr_year = m.group(1)
+                            if not tr_year:
+                                m = re.search(r'/(\d{4})/', tr.get("url", ""))
+                                if m:
+                                    tr_year = m.group(1)
+
+                            # Year must match for targeted search — prevents wrong-case matches
+                            if tr_year and tr_year == doc_year:
+                                result = self._fetch_judgment(tr["url"])
+                                if result["status"] == "found":
+                                    search_trail.append({"source": "SAFLII (targeted search)", "result": "Found"})
+                                    return self._add_standard_keys(result,
+                                        search_trail=search_trail,
+                                        saflii_citation=tr.get("citation") or direct_citation,
+                                        match_confidence=100,
+                                        found_via="SAFLII",
+                                    )
+
+                        if targeted_results:
+                            search_trail.append({"source": "SAFLII (targeted search)", "result": "Results found but year mismatch"})
+                        else:
+                            search_trail.append({"source": "SAFLII (targeted search)", "result": "No results"})
+                except Exception:
+                    search_trail.append({"source": "SAFLII (targeted search)", "result": "Error"})
 
         # ---- Step 2: Search SAFLII by party names ----
         search_results = self._search_saflii(citation_data)
@@ -1490,6 +1573,19 @@ def _clean_party_name(raw_name):
     Also strips footnote markers like leading * or trailing footnote numbers.
     """
     name = raw_name.strip().lstrip("*").strip()
+
+    # Strip known non-party prefixes that leak in from footnote text
+    noise_prefixes = [
+        r"^Judgment\s+reported\s+as\s+",
+        r"^See\s+also\s+",
+        r"^See\s+",
+        r"^In\s+",
+        r"^Compare\s+",
+        r"^Cf\.?\s+",
+    ]
+    for prefix in noise_prefixes:
+        name = re.sub(prefix, "", name, flags=re.IGNORECASE)
+
     # If the name contains 'v' (the versus separator), try to trim leading junk
     v_match = re.search(r'\bv\.?\s', name)
     if v_match:
